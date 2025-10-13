@@ -1,7 +1,8 @@
 # main.py
 
-from modules import action_modules
+from modules import system_prompt_hermone
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import math, time
 class MovementsTools:
     def __init__(self):
         self.position = [0, 0, 0]  # x, y, z
@@ -10,6 +11,7 @@ class MovementsTools:
     def move_up(self):
         self.position[2] += 1
         print(f"Moved up to position: {self.position}")
+
 
     def move_down(self):
         self.position[2] -= 1
@@ -23,9 +25,9 @@ class MovementsTools:
         self.position[0] += 1
         print(f"Moved right to position: {self.position}")
 
-    def move_front(self):
+    def move_forward(self):
         self.position[1] += 1
-        print(f"Moved front to position: {self.position}")
+        print(f"Moved forward to position: {self.position}")
 
     def move_back(self):
         self.position[1] -= 1
@@ -130,7 +132,7 @@ def execute(generated_code, manipulator):
         "move_down": manipulator.move_down,
         "move_left": manipulator.move_left,
         "move_right": manipulator.move_right,
-        "move_front": manipulator.move_front,
+        "move_forward": manipulator.move_forward,
         "move_back": manipulator.move_back,
         "gripper_close": manipulator.gripper_close,
         "gripper_open": manipulator.gripper_open,
@@ -138,7 +140,7 @@ def execute(generated_code, manipulator):
     
     print("\n=== EXECUTING GENERATED CODE ===")
     print(generated_code)
-    print("\n=== EXECUTION OUTPUT ===")
+    
     
     try:
         exec(generated_code, {"range": range}, local_vars)
@@ -151,52 +153,6 @@ def execute(generated_code, manipulator):
 
 
 
-# Generate system prompt with imported action modules
-def create_system_prompt():
-    # Build the modules documentation string
-    modules_doc = "\n".join([
-        f"{module.name}(): {module.description}\n  Example: {module.example_code}"
-        for module in action_modules
-    ])
-    
-    system_prompt = f"""
-        You are an embodied AI agent for a robotic manipulator.
-        Your primary role is to generate Python code to control the manipulator and achieve the user's requested task.
-        You must use only the provided movement and gripper functions.
-        Do not invent new functions or use any functions not listed below.
-        Always generate code that is safe, clear, and efficient.
-        Use loops and conditionals when necessary to achieve complex tasks.
-        If the user requests a repeated or patterned movement, use appropriate control structures.
-        If the user requests gripper actions, use gripper_open() or gripper_close() as needed.
-        Do not include explanations or comments in the generated code unless explicitly requested.
-        Assume the manipulator starts at position [0, 0, 0] and gripper is open.
-        Do not move outside the allowed workspace unless the user specifies.
-        If the user input is ambiguous, make reasonable assumptions and proceed.
-        Always use integer steps for movement functions.
-        Do not use floating point values for movement unless specified.
-        If the user requests a shape (circle, square, etc.), approximate using available movement functions.
-        If the user requests a pick-and-place, use gripper_close() to pick and gripper_open() to release.
-        Do not ask the user for clarification; generate code based on the input.
-        Do not use external libraries or modules in the generated code.
-        Do not use print statements unless the user requests output.
-        Do not use recursion; use loops for repeated actions.
-        Do not use global variables; keep all code within the main scope.
-        Do not use class definitions in the generated code.
-        Do not use try/except blocks unless the user requests error handling.
-        Do not use input() statements in the generated code.
-
-        Below are the available functions and their documentation:
-
-        {modules_doc}
-
-        Always follow these rules and use only the functions listed above to generate code for the manipulator.
-"""
-    return system_prompt
-
-
-# Create the system prompt
-system_prompt = create_system_prompt()
-
 
 if __name__ == "__main__":
     
@@ -205,7 +161,7 @@ if __name__ == "__main__":
     print("Model loaded successfully!\n")
     
     # Create system prompt
-    system_prompt = create_system_prompt()
+    system_prompt = system_prompt_hermone
     
     # Initialize manipulator
     manipulator = MovementsTools()
