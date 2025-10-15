@@ -42,18 +42,25 @@ class MovementsTools:
         print("Gripper opened")
 
 
-def input_creater():
-    raw_input = input("Enter your command (e.g., 'move in circle for 2 times'): ")
-    return raw_input
+def input_creater() -> str:
+    """Prompt user for natural language command."""
+    raw_input = input("Enter your command (e.g., 'move in circle for 2 times') or 'quit' to exit: ")
+    return raw_input.strip()
 
 
-def load_qwen_model():
-    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
+def load_qwen_model() -> tuple[AutoModelForCausalLM, AutoTokenizer]:
+    """Load the Qwen model and tokenizer."""
+    model_name = "Team-ACE/ToolACE-2-Llama-3.1-8B"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name)
     return model, tokenizer
 
-def code_generate(system_prompt, user_input, model, tokenizer):
+def code_generate(
+    system_prompt: str,
+    user_input: str,
+    model: AutoModelForCausalLM,
+    tokenizer: AutoTokenizer,
+) -> str:
     """
     Generates Python code based on system prompt and user input using Qwen model.
     
@@ -66,10 +73,11 @@ def code_generate(system_prompt, user_input, model, tokenizer):
     Returns:
         str: Generated Python code
     """
+    manipulator = MovementsTools()
     # Construct messages in chat format (similar to OpenAI API)
     messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"{user_input}\n\nGenerate ONLY the Python code to accomplish this task. Do not include explanations."}
+        {"role": "system", "content": f"{system_prompt}\n Current position of end effector (x,y,z) : {manipulator.position}\n Current gripper state : {manipulator.gripper_state}\n"},
+        {"role": "user", "content": f"{user_input}\n"}
     ]
     
     # Apply chat template
@@ -86,13 +94,14 @@ def code_generate(system_prompt, user_input, model, tokenizer):
     outputs = model.generate(
         **inputs,
         max_new_tokens=8192,
-        temperature=0.3,
+        temperature=0.5,
         do_sample=True,
         pad_token_id=tokenizer.eos_token_id
     )
     
     # Decode output
-    generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    new_tokens = outputs[0][len(inputs['input_ids'][0]):]
+    generated_text = tokenizer.decode(new_tokens, skip_special_tokens=True)
     
     # Extract only the assistant's response (code)
     # The generated text includes the entire conversation, we need only the last part
@@ -103,19 +112,19 @@ def code_generate(system_prompt, user_input, model, tokenizer):
         code = generated_text.split(user_input)[-1].strip()
     
     # Clean up code block markers if present
-    # Clean up code block markers if present
-# Clean up code block markers if present
     if "```python" in code:
         code = code.split("```python", 1)[1].split("```", 1)[0].strip()
     elif "```" in code:
         code = code.split("```", 1)[1].split("```", 1)[0].strip()
 
-    
     return code
 
 
 
-def execute(generated_code, manipulator):
+def execute(
+    generated_code: str,
+    manipulator: MovementsTools,
+) -> bool:
     """
     Executes the generated code with access to manipulator functions.
     
@@ -138,13 +147,14 @@ def execute(generated_code, manipulator):
         "gripper_open": manipulator.gripper_open,
     }
     
-    print("\n=== EXECUTING GENERATED CODE ===")
+    print("\n=== GENERATED CODE ===")
     print(generated_code)
-    
+    print("\n=== GENERATED CODE ===")
     
     try:
+        print("\n=== EXECUTING GENERATED CODE ===")
         exec(generated_code, {"range": range}, local_vars)
-        print("\n=== EXECUTION SUCCESSFUL ===")
+        print("\n=== EXECUTING GENERATED CODE ===")
         return True
     except Exception as e:
         print(f"\n=== EXECUTION FAILED ===")
@@ -155,7 +165,6 @@ def execute(generated_code, manipulator):
 
 
 if __name__ == "__main__":
-    
     print("Loading Qwen model...")
     model, tokenizer = load_qwen_model()
     print("Model loaded successfully!\n")
@@ -163,19 +172,28 @@ if __name__ == "__main__":
     # Create system prompt
     system_prompt = system_prompt_hermone
     
-    # Initialize manipulator
+    # Initialize manipulator (state persists across iterations)
     manipulator = MovementsTools()
     
-    # Get user input
-    user_input = input_creater()
+    print("Manipulator initialized. Position: [0, 0, 0], Gripper: open\n")
     
-    # Generate code
-    print("\n=== GENERATING CODE ===")
-    generated_code = code_generate(system_prompt, user_input, model, tokenizer)
-    
-    # Execute the generated code
-    success = execute(generated_code, manipulator)
-    
-    # Print final state
-    print(f"\nFinal manipulator position: {manipulator.position}")
-    print(f"Gripper state: {manipulator.gripper_state}")
+    while True:
+        # Get user input
+        user_input = input_creater()
+        
+        # Check for quit condition
+        if user_input.lower() == "quit":
+            print("Exiting manipulator control loop.")
+            break
+        
+        # Generate code
+        print("\n=== GENERATING CODE ===")
+        generated_code = code_generate(system_prompt, user_input, model, tokenizer)
+        
+        # Execute the generated code
+        success = execute(generated_code, manipulator)
+        
+        # Print current state after execution (success or failure)
+        print(f"\nCurrent manipulator position: {manipulator.position}")
+        print(f"Current gripper state: {manipulator.gripper_state}\n")
+        print("-" * 50)  # Separator for readability
