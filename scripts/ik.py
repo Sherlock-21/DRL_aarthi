@@ -26,15 +26,9 @@ def inverse_kinematics(x, y, z, l1=1.0, l2=1.0, l3=1.0, l4=0.5):
     theta3_deg = np.degrees(theta3)
     theta4_deg = np.degrees(theta4)
     
-    return {
-        'theta1_rad': theta1, 'theta2_rad': theta2, 'theta3_rad': theta3, 'theta4_rad': theta4,
-        'theta1_deg': theta1_deg, 'theta2_deg': theta2_deg, 'theta3_deg': theta3_deg, 'theta4_deg': theta4_deg
-    }
+    return theta1_deg, theta2_deg, theta3_deg, theta4_deg
+    
 
 # Example usage
 x, y, z = 10, 10, 10
 result = inverse_kinematics(x, y, z)
-print(f"Theta1: {result['theta1_rad']:.4f} rad, {result['theta1_deg']:.2f} deg")
-print(f"Theta2: {result['theta2_rad']:.4f} rad, {result['theta2_deg']:.2f} deg")
-print(f"Theta3: {result['theta3_rad']:.4f} rad, {result['theta3_deg']:.2f} deg")
-print(f"Theta4: {result['theta4_rad']:.4f} rad, {result['theta4_deg']:.2f} deg")

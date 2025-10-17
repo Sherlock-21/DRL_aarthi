@@ -23,7 +23,6 @@ Here is a list of functions in JSON format that you can invoke.\n{functions}\n
 # User query
 query = "Find me the sales growth rate for company XYZ for the last 3 years and also the interest coverage ratio for the same duration."
 
-# Availabel tools in JSON format (OpenAI-format)
 tools = [
     {
         "name": "financial_ratios.interest_coverage", "description": "Calculate a company's interest coverage ratio given the company name and duration",
