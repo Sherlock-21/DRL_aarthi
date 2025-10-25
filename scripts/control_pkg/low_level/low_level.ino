@@ -6,6 +6,7 @@
 #include <sensor_msgs/msg/joint_state.h>
 #include <WiFi.h>
 
+#define MAX_JOINTS 5
 // WiFi credentials
 const char* ssid = "Network";
 const char* password = "12345678";
@@ -67,6 +68,22 @@ void setup() {
   servo_2.write(90);
   servo_3.write(90);
   servo_4.write(0);
+
+  msg.name.capacity = MAX_JOINTS;
+  msg.name.size = 0;
+  msg.name.data = (rosidl_runtime_c__String*) malloc(MAX_JOINTS * sizeof(rosidl_runtime_c__String));
+  
+  msg.position.capacity = MAX_JOINTS;
+  msg.position.size = 0;
+  msg.position.data = (double*) malloc(MAX_JOINTS * sizeof(double));
+  
+  msg.velocity.capacity = MAX_JOINTS;
+  msg.velocity.size = 0;
+  msg.velocity.data = (double*) malloc(MAX_JOINTS * sizeof(double));
+  
+  msg.effort.capacity = MAX_JOINTS;
+  msg.effort.size = 0;
+  msg.effort.data = (double*) malloc(MAX_JOINTS * sizeof(double));
   
   // Configure micro-ROS WiFi transport
   set_microros_wifi_transports(ssid, password, agent_ip, agent_port);

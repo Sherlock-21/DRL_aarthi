@@ -1,5 +1,6 @@
 from modules import system_prompt_hermone
 from ik import inverse_kinematics
+from toolace_infer import  load_qwen_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import math, time, rclpy
 from rclpy.node import Node
@@ -17,8 +18,6 @@ class MovementsTools(Node):
         self.t4= 90
         self.t5 = 0
 
-
-        
 
 
         # Create publisher for joint_states topic
@@ -123,12 +122,7 @@ def input_creater() -> str:
     return raw_input.strip()
 
 
-def load_qwen_model() -> tuple[AutoModelForCausalLM, AutoTokenizer]:
-    """Load the Qwen model and tokenizer."""
-    model_name = "Team-ACE/ToolACE-2-Llama-3.1-8B"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-    return model, tokenizer
+
 
 
 def code_generate(
