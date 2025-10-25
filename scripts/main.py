@@ -33,7 +33,7 @@ class MovementsTools(Node):
         self.get_logger().info(f'Published joint states: {msg.position}')
 
     def move_up(self):
-        self.position[2] += 1
+        self.position[2] += 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -46,7 +46,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_down(self):
-        self.position[2] -= 1
+        self.position[2] -= 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -58,7 +58,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_left(self):
-        self.position[0] -= 1
+        self.position[0] -= 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -70,7 +70,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_right(self):
-        self.position[0] += 1
+        self.position[0] += 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -82,7 +82,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_forward(self):
-        self.position[1] += 1
+        self.position[1] += 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -94,7 +94,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_back(self):
-        self.position[1] -= 1
+        self.position[1] -= 20
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -130,6 +130,7 @@ def code_generate(
     user_input: str,
     model: AutoModelForCausalLM,
     tokenizer: AutoTokenizer,
+    manipulator: MovementsTools
 ) -> str:
     """
     Generates Python code based on system prompt and user input using Qwen model.
@@ -143,7 +144,6 @@ def code_generate(
     Returns:
         str: Generated Python code
     """
-    manipulator = MovementsTools()
     # Construct messages in chat format (similar to OpenAI API)
     messages = [
         {"role": "system", "content": f"{system_prompt}\n Current position of end effector (x,y,z) : {manipulator.position}\n Current gripper state : {manipulator.t5}\n"},
@@ -262,7 +262,7 @@ def main():
 
             # Generate code
             print("\n=== GENERATING CODE ===")
-            generated_code = code_generate(system_prompt, user_input, model, tokenizer)
+            generated_code = code_generate(system_prompt, user_input, model, tokenizer,manipulator)
 
             # Execute the generated code
             success = execute(generated_code, manipulator)
