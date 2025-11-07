@@ -11,7 +11,8 @@ model = AutoModelForCausalLM.from_pretrained(
 
 
 # You can modify the prompt for your task
-system_prompt = """You are an expert in composing functions. You are given a question and a set of possible functions. Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
+system_prompt = """ You are the brain for a robotic manipulator, You should generate a Python code with simple if, else, for loops which could be used by the robot to move. The generated code should achieve the user given task
+You are an expert in composing functions. You are given a question and a set of possible functions. Based on the question, you will need to make one or more function/tool calls to achieve the purpose.
 If none of the function can be used, point it out. If the given question lacks the parameters required by the function, also point it out.
 You should only return the function call in tools call sections.
 

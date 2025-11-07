@@ -1,16 +1,18 @@
 from modules import system_prompt_hermone
-from ik import inverse_kinematics
+from ik_Aathi import ik as inverse_kinematics
 from toolace_infer import  load_qwen_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import math, time, rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+
 from sensor_msgs.msg import JointState
 
 
 class MovementsTools(Node):
     def __init__(self):
         super().__init__('manipulator_controller')
-        self.position = [0, 0, 0]  # x, y, z
+        self.position = [0, 0, 46]  # x, y, z
         
         self.t1= 90
         self.t2=90
@@ -19,21 +21,37 @@ class MovementsTools(Node):
         self.t5 = 0
 
 
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=10
+        )
+
 
         # Create publisher for joint_states topic
-        self.joint_state_publisher = self.create_publisher(JointState, 'joint_states', 10)
+        self.joint_state_publisher = self.create_publisher(JointState, 'joint_states', qos_profile)
 
     def publish_joint_states(self, t1, t2, t3, t4, t5):
+        # for i in range(10):
+        #     i +=1
+        #     msg = JointState()
+        #     msg.header.stamp = self.get_clock().now().to_msg()
+        #     msg.name = ['joint1', 'joint2', 'joint3', 'joint4','joint5', 'joint6']
+        #     msg.position = [(t1/10)*i, (t2/10)*i, (t3/10)*i, 90.0, (t4/10)*i,t5]
+        #     self.joint_state_publisher.publish(msg)
+        #     self.get_logger().info(f'Published joint states: {msg.position}')
+        #     time.sleep(1)
+
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.name = ['joint1', 'joint2', 'joint3', 'joint4','joint5']
-        msg.position = [t1, t2, t3, t4, t5]
+        msg.name = ['joint1', 'joint2', 'joint3', 'joint4','joint5', 'joint6']
+        msg.position = [(t1), (t2), (t3), 90.0, (t4),t5]
         self.joint_state_publisher.publish(msg)
-        time.sleep(1)
         self.get_logger().info(f'Published joint states: {msg.position}')
+        time.sleep(1)
 
     def move_up(self):
-        self.position[2] += 20
+        self.position[2] += 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -46,7 +64,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_down(self):
-        self.position[2] -= 20
+        self.position[2] -= 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -58,7 +76,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_left(self):
-        self.position[0] -= 20
+        self.position[0] -= 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -70,7 +88,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_right(self):
-        self.position[0] += 20
+        self.position[0] += 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -82,7 +100,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_forward(self):
-        self.position[1] += 20
+        self.position[1] += 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -94,7 +112,7 @@ class MovementsTools(Node):
         print(f"Joint angles {t1}, {t2}, {t3}, {t4}, {self.t5}")
 
     def move_back(self):
-        self.position[1] -= 20
+        self.position[1] -= 1
         t1, t2, t3, t4 = inverse_kinematics(self.position[0], self.position[1], self.position[2])
         self.publish_joint_states(t1, t2, t3, t4, self.t5)
         self.t1= t1
@@ -130,7 +148,6 @@ def code_generate(
     user_input: str,
     model: AutoModelForCausalLM,
     tokenizer: AutoTokenizer,
-    manipulator: MovementsTools
 ) -> str:
     """
     Generates Python code based on system prompt and user input using Qwen model.
@@ -144,6 +161,7 @@ def code_generate(
     Returns:
         str: Generated Python code
     """
+    manipulator = MovementsTools()
     # Construct messages in chat format (similar to OpenAI API)
     messages = [
         {"role": "system", "content": f"{system_prompt}\n Current position of end effector (x,y,z) : {manipulator.position}\n Current gripper state : {manipulator.t5}\n"},
@@ -262,7 +280,7 @@ def main():
 
             # Generate code
             print("\n=== GENERATING CODE ===")
-            generated_code = code_generate(system_prompt, user_input, model, tokenizer,manipulator)
+            generated_code = code_generate(system_prompt, user_input, model, tokenizer)
 
             # Execute the generated code
             success = execute(generated_code, manipulator)

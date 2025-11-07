@@ -27,8 +27,8 @@ class JointTeleop(Node):
         )
         
         # Initialize joint angles (in degrees)
-        self.joint_angles = [90.0, 90.0, 90.0, 90.0, 0.0]
-        self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5']
+        self.joint_angles = [90.0, 90.0, 90.0, 90.0, 90.0 ,0.0]
+        self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5','joint6']
         
         # Increment/decrement step size (degrees)
         self.step_size = 5.0
@@ -43,6 +43,7 @@ class JointTeleop(Node):
         self.get_logger().info('  e/d: Increase/Decrease Joint 3')
         self.get_logger().info('  r/f: Increase/Decrease Joint 4')
         self.get_logger().info('  t/g: Increase/Decrease Joint 5')
+        self.get_logger().info('  c/v: Open / Close gripper')
         self.get_logger().info('  ESC: Quit')
         self.get_logger().info(f'Current angles: {self.joint_angles}')
 
@@ -83,6 +84,10 @@ class JointTeleop(Node):
                 self.joint_angles[4] += self.step_size
                 self.get_logger().info(f'Joint 5: {self.joint_angles[4]:.1f}°')
                 self.publish_joint_states()
+            elif key.char == 'c':
+                self.joint_angles[5] = 90 
+                self.get_logger().info(f'Joint 6: {self.joint_angles[5]:.1f}°')
+                self.publish_joint_states()
             
             # Decrease joint angles
             elif key.char == 'a':
@@ -104,6 +109,10 @@ class JointTeleop(Node):
             elif key.char == 'g':
                 self.joint_angles[4] -= self.step_size
                 self.get_logger().info(f'Joint 5: {self.joint_angles[4]:.1f}°')
+                self.publish_joint_states()
+            elif key.char == 'v':
+                self.joint_angles[5] = 0 
+                self.get_logger().info(f'Joint 6: {self.joint_angles[5]:.1f}°')
                 self.publish_joint_states()
                 
         except AttributeError:
