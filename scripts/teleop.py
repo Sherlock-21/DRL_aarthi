@@ -12,7 +12,7 @@ class JointTeleop(Node):
     def __init__(self):
         super().__init__('joint_teleop')
         
-        # Configure QoS profile with Best Effort
+        # Configure QoS profile with Best Effortqqeeqwwwwddddeee
         qos_profile = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
